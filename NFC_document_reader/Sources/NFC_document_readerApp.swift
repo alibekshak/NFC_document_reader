@@ -11,7 +11,7 @@ import SwiftUI
 struct NFC_document_readerApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NFCReaderView()
         }
     }
 }
