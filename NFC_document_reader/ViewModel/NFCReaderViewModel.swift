@@ -8,6 +8,7 @@
 import CoreNFC
 import Foundation
 import Observation
+import CoreNFC
 
 @Observable
 final class NFCReaderViewModel: NSObject {
