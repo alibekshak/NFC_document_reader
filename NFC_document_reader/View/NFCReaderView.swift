@@ -8,8 +8,19 @@
 import SwiftUI
 
 struct NFCReaderView: View {
+    @State private var nfcReaderViewModel = NFCReaderViewModel()
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(spacing: 20) {
+            Text(nfcReaderViewModel.message)
+            
+            Button("Scan NFC") {
+                nfcReaderViewModel.startScanning()
+            }
+        }
+        .sheet(isPresented: $nfcReaderViewModel.isScanPresented) {
+            
+        }
     }
 }
 
