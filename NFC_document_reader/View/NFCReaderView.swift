@@ -19,7 +19,17 @@ struct NFCReaderView: View {
             }
         }
         .sheet(isPresented: $nfcReaderViewModel.isScanPresented) {
-            
+            NFCScanningView(
+                state: nfcReaderViewModel.scanState,
+                onClose: {
+                    nfcReaderViewModel.closeScanning()
+                }
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.hidden)
+            .interactiveDismissDisabled(
+                nfcReaderViewModel.scanState == .scanningDocument
+            )
         }
     }
 }
