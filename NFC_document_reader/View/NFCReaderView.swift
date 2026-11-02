@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NFCReaderView: View {
     @State private var nfcReaderViewModel = NFCReaderViewModel()
-
+    
     var body: some View {
         VStack(spacing: 20) {
             Text(nfcReaderViewModel.message)
@@ -28,7 +28,8 @@ struct NFCReaderView: View {
             .presentationDetents([.medium])
             .presentationDragIndicator(.hidden)
             .interactiveDismissDisabled(
-                nfcReaderViewModel.scanState == .scanningDocument
+                nfcReaderViewModel.scanState == .readingDocument
+                || nfcReaderViewModel.scanState == .connecting
             )
         }
     }

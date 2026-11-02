@@ -101,7 +101,7 @@ extension NFCReaderViewModel: NFCTagReaderSessionDelegate {
         }
         
         Task { @MainActor in
-            self.scanState = .scanningDocument
+            self.scanState = .connecting
         }
         
         session.connect(to: tag) { [weak self] error in
@@ -119,6 +119,10 @@ extension NFCReaderViewModel: NFCTagReaderSessionDelegate {
                 
                 session.restartPolling()
                 return
+            }
+            
+            Task { @MainActor in
+                self.scanState = .readingDocument
             }
             
             Task {
@@ -139,15 +143,11 @@ private extension NFCReaderViewModel {
         session: NFCTagReaderSession
     ) async {
         do {
-            await MainActor.run {
-                scanState = .loading
-            }
-            
             try await selectPassportApplication(tag: tag)
             
             await MainActor.run {
                 message = "Passport application selected"
-                scanState = .showDocument
+                scanState = .documentReady
             }
             
             session.alertMessage = "Документ найден"
