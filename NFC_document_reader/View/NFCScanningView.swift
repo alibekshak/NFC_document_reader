@@ -16,7 +16,7 @@ struct NFCScanningView: View {
             HStack {
                 Spacer()
                 
-                if state != .readingDocument && state != .connecting {
+                if state.canClose {
                     Button(action: onClose) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .semibold))

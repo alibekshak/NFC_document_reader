@@ -8,13 +8,13 @@
 import CoreNFC
 import Foundation
 import Observation
-import CoreNFC
 
 @Observable
 final class NFCReaderViewModel: NSObject {
     var message: String = ""
     var isScanPresented = false
     var scanState: NFCScanState = .waitingDocument
+    var document: PassportDocumentModel?
     
     private var session: NFCTagReaderSession?
     
@@ -23,6 +23,9 @@ final class NFCReaderViewModel: NSObject {
             message = "NFC недоступен на этом устройстве"
             return
         }
+        
+        document = nil
+        message = ""
         
         isScanPresented = true
         scanState = .waitingDocument
@@ -122,7 +125,7 @@ extension NFCReaderViewModel: NFCTagReaderSessionDelegate {
             }
             
             Task { @MainActor in
-                self.scanState = .readingDocument
+                self.scanState = .authenticating
             }
             
             Task {
@@ -143,24 +146,39 @@ private extension NFCReaderViewModel {
         session: NFCTagReaderSession
     ) async {
         do {
-            try await selectPassportApplication(tag: tag)
+            guard tag.initialSelectedAID.uppercased()
+                    == "A0000002471001"
+            else {
+                throw NFCReaderErrorResponse.unsupportedTag
+            }
             
             await MainActor.run {
                 message = "Passport application selected"
-                scanState = .documentReady
+                scanState = .readingDocument
             }
             
-            session.alertMessage = "Документ найден"
-            
+            // Mock
+            let document = PassportDocumentModel.mock
+
+            await MainActor.run {
+                self.document = document
+                self.scanState = .documentReady
+                self.isScanPresented = false
+            }
+
+            session.alertMessage = "Документ успешно считан"
+
+            session.invalidate()
             
         } catch {
             await MainActor.run {
                 message = error.localizedDescription
-                scanState = .waitingDocument
+                scanState = .failed
             }
             
-            session.alertMessage = "Не удалось прочитать документ"
-            session.restartPolling()
+            session.invalidate(
+                errorMessage: "Не удалось прочитать документ"
+            )
         }
     }
 }
