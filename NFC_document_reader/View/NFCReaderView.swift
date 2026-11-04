@@ -19,12 +19,18 @@ struct NFCReaderView: View {
             }
         }
         .sheet(
-            item: $nfcReaderViewModel.document
-        ) { document in
-            PassportDocumentView(document: document)
-                .presentationDetents([.large])
+            item: $nfcReaderViewModel.destination
+        ) { destination in
+            sheetContent(destination)
         }
-        .sheet(isPresented: $nfcReaderViewModel.isScanPresented) {
+    }
+    
+    @ViewBuilder
+    private func sheetContent(
+        _ destination: NFCReaderDestination
+    ) -> some View {
+        switch destination {
+        case .scanning:
             NFCScanningView(
                 state: nfcReaderViewModel.scanState,
                 onClose: {
@@ -36,6 +42,12 @@ struct NFCReaderView: View {
             .interactiveDismissDisabled(
                 !nfcReaderViewModel.scanState.canClose
             )
+            
+        case let .document(document):
+            PassportDocumentView(
+                document: document
+            )
+            .presentationDetents([.large])
         }
     }
 }

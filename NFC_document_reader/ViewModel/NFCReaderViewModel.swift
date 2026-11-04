@@ -12,9 +12,9 @@ import Observation
 @Observable
 final class NFCReaderViewModel: NSObject {
     var message: String = ""
-    var isScanPresented = false
+    var destination: NFCReaderDestination?
     var scanState: NFCScanState = .waitingDocument
-    var document: PassportDocumentModel?
+    private var didFinishSuccessfully = false
     
     private var session: NFCTagReaderSession?
     
@@ -24,11 +24,10 @@ final class NFCReaderViewModel: NSObject {
             return
         }
         
-        document = nil
+        didFinishSuccessfully = false
         message = ""
-        
-        isScanPresented = true
         scanState = .waitingDocument
+        destination = .scanning
         
         session = NFCTagReaderSession(
             pollingOption: [.iso14443],
@@ -43,7 +42,7 @@ final class NFCReaderViewModel: NSObject {
     func closeScanning() {
         session?.invalidate()
         session = nil
-        isScanPresented = false
+        destination = nil
     }
 }
 
@@ -67,17 +66,24 @@ extension NFCReaderViewModel: NFCTagReaderSessionDelegate {
         Task { @MainActor in
             self.session = nil
             
+            if self.didFinishSuccessfully {
+                self.didFinishSuccessfully = false
+                return
+            }
+            
             switch nfcError?.code {
             case .readerSessionInvalidationErrorUserCanceled:
-                self.isScanPresented = false
+                self.destination = nil
                 
             case .readerSessionInvalidationErrorSessionTimeout:
                 self.message = "Время сканирования истекло"
-                self.isScanPresented = false
+                self.scanState = .failed
+                self.destination = nil
                 
             default:
                 self.message = error.localizedDescription
-                self.isScanPresented = false
+                self.scanState = .failed
+                self.destination = nil
             }
         }
     }
@@ -161,9 +167,9 @@ private extension NFCReaderViewModel {
             let document = PassportDocumentModel.mock
 
             await MainActor.run {
-                self.document = document
+                self.didFinishSuccessfully = true
                 self.scanState = .documentReady
-                self.isScanPresented = false
+                self.destination = .document(document)
             }
 
             session.alertMessage = "Документ успешно считан"
@@ -178,42 +184,6 @@ private extension NFCReaderViewModel {
             
             session.invalidate(
                 errorMessage: "Не удалось прочитать документ"
-            )
-        }
-    }
-}
-
-// MARK: - SELECT AID
-
-private extension NFCReaderViewModel {
-    func selectPassportApplication(
-        tag: NFCISO7816Tag
-    ) async throws {
-        let aid = Data([
-            0xA0,
-            0x00,
-            0x00,
-            0x02,
-            0x47,
-            0x10,
-            0x01
-        ])
-        
-        let apdu = NFCISO7816APDU(
-            instructionClass: 0x00,
-            instructionCode: 0xA4,
-            p1Parameter: 0x04,
-            p2Parameter: 0x0C,
-            data: aid,
-            expectedResponseLength: 256
-        )
-        
-        let (_, sw1, sw2) = try await tag.sendCommand(apdu: apdu)
-        
-        guard sw1 == 0x90, sw2 == 0x00 else {
-            throw NFCReaderErrorResponse.statusWord(
-                sw1: sw1,
-                sw2: sw2
             )
         }
     }
