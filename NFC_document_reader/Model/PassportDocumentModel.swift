@@ -71,6 +71,6 @@ extension PassportDocumentModel {
                 day: 1
             )
         ),
-        faceImage: nil
+        faceImage: UIImage(systemName: "person.crop.rectangle")
     )
 }

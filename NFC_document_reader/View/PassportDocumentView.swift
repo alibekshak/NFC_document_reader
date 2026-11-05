@@ -11,7 +11,7 @@ struct PassportDocumentView: View {
     let document: PassportDocumentModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 24) {
             if let image = document.faceImage {
                 Image(uiImage: image)
                     .resizable()
@@ -22,46 +22,57 @@ struct PassportDocumentView: View {
                     )
             }
             
-            Text(document.fullName)
-                .font(.title2.bold())
+            documentInfo
             
-            LabeledContent(
-                "Document number",
-                value: document.documentNumber
-            )
-            
-            LabeledContent(
-                "Nationality",
-                value: document.nationality
-            )
-            
-            LabeledContent(
-                "Date of birth",
-                value: document.dateOfBirthText
-            )
-            
-            LabeledContent(
-                "Sex",
-                value: document.sex
-            )
-            
-            LabeledContent(
-                "Expiry date",
-                value: document.expiryDateText
-            )
-            
-            LabeledContent(
-                "Issuing state",
-                value: document.issuingState
-            )
-            
-            LabeledContent(
-                "Document type",
-                value: document.documentType
-            )
+            Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+    
+    private var documentInfo: some View {
+        VStack(spacing: 16) {
+            infoRow(
+                title: "Document number",
+                value: document.documentNumber
+            )
+            
+            infoRow(
+                title: "Nationality",
+                value: document.nationality
+            )
+            
+            infoRow(
+                title: "Date of birth",
+                value: document.dateOfBirthText
+            )
+            
+            infoRow(
+                title: "Expiry date",
+                value: document.expiryDateText
+            )
+            
+            infoRow(
+                title: "Document type",
+                value: document.documentType
+            )
+        }
+    }
+    
+    private func infoRow(
+        title: String,
+        value: String
+    ) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            Text(title)
+                .foregroundStyle(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .fontWeight(.medium)
+                .multilineTextAlignment(.trailing)
+        }
     }
 }
 
